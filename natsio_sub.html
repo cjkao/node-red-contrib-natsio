@@ -1,15 +1,15 @@
 <script type="text/javascript">
-  RED.nodes.registerType('natsio-sub',{
+  RED.nodes.registerType('natsio-sub', {
     category: 'NatsIO',
     color: '#3FADB5',
     defaults: {
-      server: {value:"", type:"natsio-server", required:true},
-      subject: {value:">"},
-      maxWanted: {value:""}, // unsubscribe after maxWanted
-      queue:{value:""}
+      server: { value: "", type: "natsio-server", required: true },
+      subject: { value: ">" },
+      maxWanted: { value: 0, validate: RED.validators.number() }, // unsubscribe after maxWanted
+      queue: { value: "" }
     },
-    inputs:0,
-    outputs:1,
+    inputs: 0,
+    outputs: 1,
     icon: "bridge.png",
     label: "nats-sub"
   });
