@@ -1,23 +1,24 @@
 <script type="text/javascript">
-  RED.nodes.registerType('natsio-server',{
+  RED.nodes.registerType('natsio-server', {
     category: 'config',
     defaults: {
-      name: {value:''},
-      host: {value:'localhost',required:true},
-      port: {value:4222,required:true,validate:RED.validators.number()},
-      json: {value:true}
+      name: { value: '' },
+      host: { value: 'localhost', required: true },
+      port: { value: 4222, required: true, validate: RED.validators.number() },
+      json: { value: true },
+      cred: { type: "text" },
     },
     credentials: {
-      username: {type: "text"},
-      password: {type: "password"}
+      username: { type: "text" },
+      password: { type: "text" }
     },
-    label: function(){
+    label: function () {
       return this.name || `${this.host}:${this.port}`;
     },
-    oneditprepare: function(){
+    oneditprepare: function () {
       var tabs = RED.tabs.create({
         id: "natsio-server-tabs",
-        onchange: function(tab) {
+        onchange: function (tab) {
           $("#natsio-server-tabs-content").children().hide();
           $("#" + tab.id).show();
         }
@@ -30,7 +31,7 @@
         id: "natsio-server-tab-security",
         label: "Security"
       });
-      setTimeout(() => { tabs.resize(); },0);
+      setTimeout(() => { tabs.resize(); }, 0);
     },
   });
 </script>
@@ -79,7 +80,13 @@
         <label for="node-config-input-password">
           <i class="icon-tag"></i> pass
         </label>
-        <input type="password" id="node-config-input-password">
+        <input type="text" id="node-config-input-password">
+      </div>
+      <div class="form-row">
+        <label for="node-config-input-cred">
+          <i class="icon-tag"></i> Credential 
+        </label>
+        <input type="text" id="node-config-input-cred">
       </div>
     </div>
   </div>

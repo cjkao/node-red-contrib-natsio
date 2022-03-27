@@ -1,54 +1,77 @@
-var nats = require('nats');
+// var nats = require('nats');
+const { connect, credsAuthenticator, ErrorCode, headers, StringCodec, Events, DebugEvents } = require("nats");
+const natsFun = async function (RED) {
 
-module.exports = function(RED) {
   function RemoteServerNode(n) {
-    RED.nodes.createNode(this,n);
+    RED.nodes.createNode(this, n);
     var node = this;
     var user = node.credentials.username;
     var pass = node.credentials.password;
 
-    let server = 'nats://'
-    if(user){
-      server += user + (pass? ':'+ pass : '') + '@'
+    let server = 'nats://';
+    if (user) {
+      server += user + (pass ? ':' + pass : '') + '@';
     }
-    server += `${n.host}:${n.port}`
-    console.log(server)
+    server += `${n.host}:${n.port}`;
+    console.log(server);
 
-    node.nc = nats.connect({
-      'servers': [server],
-      'maxReconnectAttempts': -1,
-      'reconnectTimeWait': 250,
-      'json': n.json
-    });
 
-    node.nc.on('error', (e) => {
-      node.log(e)
-      node.emit('Status', {fill:"red",shape:"dot",text:"Broker not found"})
-    })
-    node.nc.on('connect', () => {
-      node.emit('Status',{fill:"green",shape:"dot",text:"connected"});
-    })
-    node.nc.on('reconnecting', () => {
-      node.emit('Status', {fill:"green",shape:"ring",text:"connecting"});
-    })
-    node.nc.on('reconnected', () => {
-      node.emit('Status', {fill:"green",shape:"dot",text:"reconnected"});
-    })
-    node.nc.on('disconnect', () => {
-      node.emit('Status', {fill:"red",shape:"ring",text:"disconnected"})
-    })
 
-    node.on('close', function() {
-      if (node.nc || !node.nc.closed) {
-        node.nc.close();
+
+
+
+    (async () => {
+
+      try {
+        if (user) {
+          node.nc = connect({
+            port: n.port, server: [server], reconnectTimeWait: 10 * 1000, waitOnFirstConnect: true
+          });
+        } else {
+
+          let authenticator = credsAuthenticator(new TextEncoder().encode(n.cred));
+
+          node.nc = connect({
+            port: n.port, server: [server], "authenticator": authenticator, reconnectTimeWait: 10 * 1000, waitOnFirstConnect: true
+          });
+        }
+      } catch (err) {
+        node.status({ fill: "red", shape: "dot", text: err.message ? err.message : "authenticate error" });
+        node.nc = Promise.resolve(err);
+        console.log(err);
+        return;
       }
-    });
+
+
+
+      node.nc.then(async nc => {
+        nc.closed().then(() => {
+          console.log("the connection closed!");
+        });
+        node.ncSolved = nc;
+
+
+      });
+    })();
+
+
+    (async () => {
+      node.on('close', async function () {
+        if (node.ncSolved && !node.ncSolved.closed) {
+
+          await node.ncSolved.close();
+        }
+      });
+
+    })();
+
   }
 
-  RED.nodes.registerType('natsio-server',RemoteServerNode,{
+  RED.nodes.registerType('natsio-server', RemoteServerNode, {
     credentials: {
-      username: {type:"text"},
-      password: {type: "password"}
+      username: { type: "text" },
+      password: { type: "password" }
     }
   });
 }
+module.exports = natsFun;
