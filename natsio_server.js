@@ -8,29 +8,24 @@ const natsFun = async function (RED) {
     var user = node.credentials.username;
     var pass = node.credentials.password;
 
-    let server = 'nats://';
-    if (user) {
-      server += user + (pass ? ':' + pass : '') + '@';
-    }
-    server += `${n.host}:${n.port}`;
-    console.log("server:" + user + `${n.host}:${n.port}`);
+    let server = n.url.split(',');
+    console.log("server: " + n.host + " user: " + user);
 
     (async () => {
-
-      // try {
       if (user) {
         node.nc = connect({
-          port: n.port, server: [server], reconnectTimeWait: 10 * 1000, waitOnFirstConnect: true
+          server: [server], reconnectTimeWait: 10 * 1000, waitOnFirstConnect: true,
+          user: user, pass: pass,
         });
       } else {
-
         let authenticator = credsAuthenticator(new TextEncoder().encode(n.cred));
-
         node.nc = connect({
-          port: n.port, server: [server], "authenticator": authenticator, reconnectTimeWait: 10 * 1000, waitOnFirstConnect: true
+          server: [server], "authenticator": authenticator, reconnectTimeWait: 10 * 1000, waitOnFirstConnect: true
         });
       }
-      // } 
+      node.nc.then((nc) => {
+        console.log(`connected to ${nc.getServer()}`);
+      });
 
 
 
@@ -91,13 +86,9 @@ const natsFun = async function (RED) {
     //   return;
     // }
 
-    (async () => {
-      node.on('close', async function () {
-        if (node.ncSolved) {
-          await node.ncSolved.close();
-        }
-      });
-    })();
+    node.on('close', function () {
+      node.nc.then(async (nc) => { await nc.close(); });
+    });
 
   }
 

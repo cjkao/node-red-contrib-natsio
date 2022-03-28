@@ -3,8 +3,8 @@
     category: 'config',
     defaults: {
       name: { value: '' },
-      host: { value: 'localhost', required: true },
-      port: { value: 4222, required: true, validate: RED.validators.number() },
+      url: { value: 'nats://localhost:4222', required: true },
+      // port: { value: 4222, required: true, validate: RED.validators.number() },
       json: { value: true },
       cred: { type: "text" },
     },
@@ -13,7 +13,7 @@
       password: { type: "text" }
     },
     label: function () {
-      return this.name || `${this.host}:${this.port}`;
+      return this.name || `${this.url}`;
     },
     oneditprepare: function () {
       var tabs = RED.tabs.create({
@@ -51,17 +51,12 @@
   <div id="natsio-server-tabs-content" style="min-height: 170px;">
     <div id="natsio-server-tab-connection" style="display:none">
       <div class="form-row">
-        <label for="node-config-input-host">
-          <i class="icon-bookmark"></i> Host
+        <label for="node-config-input-url">
+          <i class="icon-bookmark"></i> URL
         </label>
-        <input type="text" id="node-config-input-host">
+        <input type="text" id="node-config-input-url">
       </div>
-      <div class="form-row">
-        <label for="node-config-input-port">
-          <i class="icon-bookmark"></i> Port
-        </label>
-        <input type="text" id="node-config-input-port">
-      </div>
+   
       <div class="form-row">
         <label for="node-config-input-json">
           <i class="icon-bookmark"></i> JSON mode

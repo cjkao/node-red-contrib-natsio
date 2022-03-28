@@ -14,19 +14,17 @@ module.exports = function (RED) {
     // var sid = null;
 
     (async () => {
-
       node.server.nc.then(async nc => {
         try {
           let opt = {};
           if (parseInt(n.maxWanted) > 0) {
-            opt.max = opt.maxWanted = parseInt(n.maxWanted);
+            opt.max = parseInt(n.maxWanted);
           }
           if (n.queue.length > 0) {
             opt.queue = n.queue
           }
-          const sub = nc.subscribe(n.subject, opt);
-          node.sid = sub.sid;
-          for await (const m of sub) {
+          node.subscriber = nc.subscribe(n.subject, opt);
+          for await (const m of node.subscriber) {
             node.send({ payload: sc.decode(m.data), topic: n.subject });
             node.log(`[${sub.getProcessed()}]: ${sc.decode(m.data)}`);
           }
@@ -40,10 +38,7 @@ module.exports = function (RED) {
 
     })();
     node.on('close', () => {
-      if (node.sid) {
-        node.server.nc.unsubscribe(node.sid);
-      }
-      // node.server.setMaxListeners(node.server.getMaxListeners() - 1)
+      node.subscriber.unsubscribe();
     });
   }
   RED.nodes.registerType("natsio-sub", NatsSubNode);
