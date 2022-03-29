@@ -6,17 +6,16 @@ module.exports = function (RED) {
     var node = this;
 
     node.server = RED.nodes.getNode(n.server)
-    // node.server.setMaxListeners(node.server.getMaxListeners() + 1)
-    node.server.on('nats_status', (st) => {
-      node.status(st)
+    node.server.addListener("nats_status", function (status) {
+      node.status(status);
     });
     const sc = StringCodec();
     node.on('input', function (msg) {
       var subject = msg.replyTo || msg.topic || n.subject;
       var message = msg.payload || n.message;
 
-      if (subject && message && !node.server.nc.closed) {
-        this.server.ncSolved.publish(subject, sc.encode(message));
+      if (subject && message) {
+        this.server.nc.then((nc) => nc.publish(subject, sc.encode(message)));
       }
     });
 

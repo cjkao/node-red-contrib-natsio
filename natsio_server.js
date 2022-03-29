@@ -1,6 +1,6 @@
 // var nats = require('nats');
 const { connect, credsAuthenticator, ErrorCode, headers, StringCodec, Events, DebugEvents } = require("nats");
-const natsFun = async function (RED) {
+const natsFun = function (RED) {
 
   function RemoteServerNode(n) {
     RED.nodes.createNode(this, n);
@@ -14,13 +14,13 @@ const natsFun = async function (RED) {
     (async () => {
       if (user) {
         node.nc = connect({
-          server: [server], reconnectTimeWait: 10 * 1000, waitOnFirstConnect: true,
+          servers: [server], reconnectTimeWait: 10 * 1000, waitOnFirstConnect: true,
           user: user, pass: pass,
         });
       } else {
         let authenticator = credsAuthenticator(new TextEncoder().encode(n.cred));
         node.nc = connect({
-          server: [server], "authenticator": authenticator, reconnectTimeWait: 10 * 1000, waitOnFirstConnect: true
+          servers: [server], "authenticator": authenticator, reconnectTimeWait: 10 * 1000, waitOnFirstConnect: true
         });
       }
       node.nc.then((nc) => {
@@ -34,7 +34,7 @@ const natsFun = async function (RED) {
         nc.closed().then(() => {
           console.log("the connection closed!");
         });
-        node.ncSolved = nc;
+        // node.ncSolved = nc;
         return nc;
       }).then(async nc => {
         for await (const s of nc.status()) {
@@ -74,9 +74,7 @@ const natsFun = async function (RED) {
         }
 
       });
-    })().catch(err => {
-      console.log(err);
-    });
+    })();
 
 
     // {
